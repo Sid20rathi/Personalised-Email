@@ -1,0 +1,30 @@
+1. USER AUTH & SETUP
+   ↓
+   Sign Up/Login → Store Resume in DB
+   ↓
+
+2. APPLICATION INPUT
+   ↓
+   User provides:
+   - Job Post URL (optional)/linkedin url 
+   - Company Name (required)
+   - Position (optional)
+   
+   ↓
+
+3. AI AGENT WORKFLOW (LangGraph)
+   ↓
+   Agent Tasks:
+   a. Web Scraping: Company info, products, news,jd from the url 
+   b. Email Discovery: Hiring/recruiter emails
+   c. Data Synthesis: Combine company + resume data
+   d. Email Drafting: Highly personalized email
+   e. show the score of the resume match with the jd data 
+
+4. USER REVIEW & SEND
+   ↓
+   Show generated email → User edits (optional) → Send
+   ↓
+   - Target Email IDs (optional)
+   ↓
+   Send to both: AI-discovered emails + User-provided emails
