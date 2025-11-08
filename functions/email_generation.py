@@ -19,6 +19,7 @@ from langchain.prompts import ChatPromptTemplate
 
 
 
+
 load_dotenv()
 
 class Email_structure(BaseModel):
@@ -27,16 +28,17 @@ class Email_structure(BaseModel):
 
 
 
-llm = init_chat_model("google_genai:gemini-2.5-flash", api_key=os.getenv("GOOGLE_API_KEY"))
+llm = init_chat_model("google_genai:gemini-2.5-flash", api_key=os.getenv("GOOGLE_API_KEY"),temperature=0)
 
 
 
 
 def generate_email(state:Graph_state):
 
-    extarct_prompt =ChatPromptTemplate.from_messages([
+    try:
+        extract_prompt =ChatPromptTemplate.from_messages([
         ("system", f'''You the professional email generator. yopu have to generate the email subject and body from the context provided to you and the email should be in the format of a professional email.
-        and the email subject should be short and to the point. the body should be under 150-200 words and the email should be like a human has written the email.
+        and the email subject should be short and to the point. the body should be under 200-250 words and the email should be like a human has written the email.
          context of the job posting:
 
          job_description :{state["job_description"]}
@@ -50,13 +52,31 @@ def generate_email(state:Graph_state):
          projects : {state["projects"]}
 
 
-
+         Importent note : 
+         1)Dont include the user name and the company name  in the subject of the email.
+         2) if u dont have any information about the user or the job description then u should not include that in the email. and generate a generic email to apply for any job that user can use anytime .
+         3) If the user projects matches with the job description then include them in the email .
+         4)Dont mention the total duration of experience in the email. (eg - 5 months of experience in total , mention i have experience in the field of web developement and generative Ai)
+         5) Dont include  words like "Thank you",etc keep it on point and professional .
+         6) If the job description , about the company and company name is not present or not relevant to the user then dont include it in the email.Then generate a generic email usinc the user info only.
+         7) End the email by mentioning , "Regards" , then follow up with the name of the user.
         '''),
         ("human", "Query: {Query}"),
-    ])
+        ])
 
 
-    chain = extract_prompt | llm.with_structured_output(Email_structure)
-    result = chain.invoke({
+        chain = extract_prompt | llm.with_structured_output(Email_structure)
+        result = chain.invoke({
         "Query": f"Generate an email for the job posting with the context provided to you. the email subject should be short and to the point. the body should be under 150-200 words and the email should be like a human has written the email."
-    })
+        })
+        return {
+        **state,
+        "email_subject": result.email_subject,
+        "email_body": result.email_body}
+        
+    except Exception as e:
+        print("Error:",e)
+
+
+if __name__ =="__main__":
+    generate_email(Graph_state)

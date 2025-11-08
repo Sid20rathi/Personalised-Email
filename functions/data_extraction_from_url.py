@@ -6,7 +6,6 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from dotenv import load_dotenv
-from state.state_graph import Graph_state
 from langchain_community.agent_toolkits import PlayWrightBrowserToolkit
 from langchain_community.tools.playwright.utils import create_sync_playwright_browser
 from langchain.agents import AgentExecutor, create_react_agent
@@ -15,6 +14,8 @@ from langchain import hub
 from langchain_core.prompts import ChatPromptTemplate
 from state.state_graph import Graph_state
 from pydantic import BaseModel, Field 
+import google.genai as genai
+from google.genai.types import Tool, GenerateContentConfig
 
 
 load_dotenv()
@@ -27,7 +28,13 @@ class JobDetails(BaseModel):
 
 sync_browser = create_sync_playwright_browser()
 toolkit = PlayWrightBrowserToolkit.from_browser(sync_browser=sync_browser)
-tools = toolkit.get_tools()
+tool = toolkit.get_tools()
+client = genai.Client()
+model_id = "gemini-2.5-flash"
+tools = [
+  {"url_context": {}},
+]
+
 
 llm = init_chat_model("google_genai:gemini-2.5-flash", api_key=os.getenv("GOOGLE_API_KEY"))
 prompt = hub.pull("hwchase17/react")
@@ -36,29 +43,28 @@ parser_prompt = hub.pull("hwchase17/react")
 
 
 
-def playwrigtht(state: Graph_state):
+def data_from_url(state: Graph_state):
 
-    agent = create_react_agent(
-        llm=llm,
-        tools=tools,
-        prompt=prompt
-    )
-    agent_executor = AgentExecutor(
-        agent=agent,
-        tools=tools,
-        handle_parsing_errors=True,
-        max_iteratons=10
-    )
 
-    url ="https://www.linkedin.com/jobs/view/4309474739/?alternateChannel=search&eBP=CwEAAAGaSr7CpTjHmQW9TvSiD8PEyjuaRxC-piQ9-wjgUQhvYhF811YU14PYjLIjUTHrcJxJe9Bv8U2osALsp7QgmXvWEmKF_KrlYsickg653IBMACBCSMtH0QneoNnl7jI1ijwp7Ls1qoG8OoyjqzJUbNRDICmSzIW7JIrZMNikMW4vO8_xdabTMwKM8uy7rSg31NH6PDrQXIBk592vcAbPzBQhUZ6ZnT7G3xx16eXHO2XQjEoxRY4zTx67kHPW8cxkvP_SV2a_olqRyJUs6Ui9op87PnfgtCmqAmJSTfbr_whkHX5sUfQ0IYrw5xNxVOc6l-tFl8RWheIrb0O20KwpCk-cL3w17hDTxfeNDtUjAyaWG0XaduG1Kr-q6QVvXO4Dx_8M54lsitGrwkTBSEjuwHN3pUBOKBPO6cKRI6w_O0F-zmffrRM5Or5mUATQ9uh1J2rHdlTBYGlAby3HVwQXWWhb4Um6LCd-GR2f1o0rSfgouQjj4MhQSHkednCd&refId=niFdWhD5%2B0uOPbBQboiFbg%3D%3D&trackingId=MizqNK9ON9%2FWTcE1nLdtAA%3D%3D" 
-    command = {
-        "input": f"Go to {url} and give me the job description in detail and about the company and provide contact info of the person posted the job"
-    }
+
+    url =state["url"] 
+    
+   
 
     try:
       
-        result = agent_executor.invoke(command)
-        agent_output = result["output"]
+       
+        response = client.models.generate_content(
+            model=model_id,
+            contents=f'''from the provided url {url},please provide me the  job_description ,about_company ,company_name in detail.
+            if there is no job description available then please provide me the about_company and company_name in detail.and if company name , about company and job description are not available then return None for the missing fields''',
+            config=GenerateContentConfig(
+                tools=tools,
+            )
+        )
+
+        agent_output = response.text
+ 
 
 
         parser_prompt = ChatPromptTemplate.from_messages([
@@ -69,6 +75,7 @@ def playwrigtht(state: Graph_state):
         
         structured_parser = parser_prompt | llm.with_structured_output(JobDetails)
         parsed_data = structured_parser.invoke({"text": agent_output})
+     
         
      
         return {
@@ -87,7 +94,7 @@ def playwrigtht(state: Graph_state):
 
 
 if __name__ == "__main__":
-    playwrigtht(Graph_state)
+    data_from_url(Graph_state())
 
 
 
