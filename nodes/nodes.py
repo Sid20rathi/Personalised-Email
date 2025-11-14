@@ -11,7 +11,7 @@ from functions.email_generation import generate_email
 from functions.user_data_from_db import get_user_data
 from state.state_graph import Graph_state
 from langgraph.graph import StateGraph , START ,END
-from IPython.display import Image ,display
+
 
 
 
@@ -27,10 +27,3 @@ workflow.add_edge("user_data_from_db","email_generation")
 workflow.add_edge("email_generation",END)
 
 graph  = workflow.compile()
-
-
-state = graph.invoke({"url":"https://www.anthropic.com/engineering"})
-
-print(state["email_subject"])
-print("="*50)
-print(state["email_body"])

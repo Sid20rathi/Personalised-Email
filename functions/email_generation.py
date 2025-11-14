@@ -36,6 +36,7 @@ llm = init_chat_model("google_genai:gemini-2.5-flash", api_key=os.getenv("GOOGLE
 def generate_email(state:Graph_state):
 
     try:
+       
         extract_prompt =ChatPromptTemplate.from_messages([
         ("system", f'''You the professional email generator. yopu have to generate the email subject and body from the context provided to you and the email should be in the format of a professional email.
         and the email subject should be short and to the point. the body should be under 200-250 words and the email should be like a human has written the email.
@@ -58,8 +59,10 @@ def generate_email(state:Graph_state):
          3) If the user projects matches with the job description then include them in the email .
          4)Dont mention the total duration of experience in the email. (eg - 5 months of experience in total , mention i have experience in the field of web developement and generative Ai)
          5) Dont include  words like "Thank you",etc keep it on point and professional .
-         6) If the job description , about the company and company name is not present or not relevant to the user then dont include it in the email.Then generate a generic email usinc the user info only.
+         6) If the job description , about the company and company name is not present or not relevant to the user then dont include it in the email.Then generate a generic email using the user info only.
          7) End the email by mentioning , "Regards" , then follow up with the name of the user.
+         8) If the user projects and skills matches with the company then mention how the user can be a good candidate for the job.
+         9) Include the company name in the email. use dear sir or madam not the hiring team . 
         '''),
         ("human", "Query: {Query}"),
         ])
@@ -67,8 +70,10 @@ def generate_email(state:Graph_state):
 
         chain = extract_prompt | llm.with_structured_output(Email_structure)
         result = chain.invoke({
-        "Query": f"Generate an email for the job posting with the context provided to you. the email subject should be short and to the point. the body should be under 150-200 words and the email should be like a human has written the email."
+        "Query": f"Generate an email for the job posting with the context provided to you. the email subject should be short and to the point. the body should be under 200-250 words and the email should be like a human has written the email."
         })
+
+    
         return {
         **state,
         "email_subject": result.email_subject,

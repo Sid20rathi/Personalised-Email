@@ -6,9 +6,6 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from dotenv import load_dotenv
-from langchain_community.agent_toolkits import PlayWrightBrowserToolkit
-from langchain_community.tools.playwright.utils import create_sync_playwright_browser
-from langchain.agents import AgentExecutor, create_react_agent
 from langchain.chat_models import init_chat_model
 from langchain import hub
 from langchain_core.prompts import ChatPromptTemplate
@@ -26,9 +23,6 @@ class JobDetails(BaseModel):
     about_company: str = Field(description="The general information about the company.")
     company_name: str = Field(description="The name of the company posting the job.")
 
-sync_browser = create_sync_playwright_browser()
-toolkit = PlayWrightBrowserToolkit.from_browser(sync_browser=sync_browser)
-tool = toolkit.get_tools()
 client = genai.Client()
 model_id = "gemini-2.5-flash"
 tools = [
@@ -44,6 +38,7 @@ parser_prompt = hub.pull("hwchase17/react")
 
 
 def data_from_url(state: Graph_state):
+   
 
 
 
@@ -75,6 +70,8 @@ def data_from_url(state: Graph_state):
         
         structured_parser = parser_prompt | llm.with_structured_output(JobDetails)
         parsed_data = structured_parser.invoke({"text": agent_output})
+
+        
      
         
      

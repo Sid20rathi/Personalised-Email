@@ -17,6 +17,7 @@ load_dotenv()
 
 
 def get_user_data(state:Graph_state):
+
     with Session(engine) as session:
         statement = select(ResumeInfo).where(ResumeInfo.user_id == 1)
         result = session.exec(statement)
@@ -25,6 +26,8 @@ def get_user_data(state:Graph_state):
            experience = resume.experience
            skills = resume.skills
            projects = resume.projects
+
+       
         
 
         return {
